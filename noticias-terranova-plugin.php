@@ -20,56 +20,30 @@ function noticiasterranova(){
   }
 
   // RSS Feed
-  $rss = simplexml_load_file(
-  'http://www.terranova.pt/noticias/rss');
-	//$rss = new DOMDocument();
-	//$rss->loadXML('http://www.terranova.pt/noticias/rss');
-  ?>
-  <ul>
-  <?php
-  // max number of news slots
+  $rss = fetch_feed('http://www.terranova.pt/noticias/rss/');
+	$maxitems = 0;
+	// max number of news slots
   $max_news = $options['news'];
   // maximum length to which a title may be reduced if necessary
   $max_length = $options['chars'];
 
-  $cnt = 0;
-  foreach($rss->channel->item as $i) {
-    if($max_news > 0 AND $cnt >= $max_news){
-        break;
-    }
-    ?>
-    <li>
-    <?php
-    // Title
-    $title = $i->title;
-    // Length of title
-    $length = strlen($title);
-    // if the title is longer than the previously defined maximum length,
-    // it'll he shortened and "..." added, or it'll output normaly
-    if($length > $max_length){
-      $title = substr($title, 0, $max_length)."...";
-    }
-    ?>
-    <a href="<?=$i->link?>"><?=$title?></a>
-    <?php
-    // Description
-    $description = $i->description;
-    // Length of description
-    $length = strlen($description);
-    // if the description is longer than the previously defined maximum length,
-    // it'll he shortened and "..." added, or it'll output normaly
-    if($description > $max_length){
-      $description = substr($description, 0, $max_length)."...";
-    }
-    ?>
-    <p><?=$description?></p>
-    </li>
-    <?php
-    $cnt++;
-  }
-  ?>
-  </ul>
-<?php
+	if (!is_wp_error($rss)){
+	    $maxitems = $rss->get_item_quantity( $max_news );
+	    $rss_items = $rss->get_items( 0, $maxitems );
+	}
+	echo "<ul>";
+		if($maxitems == 0 ){
+			echo "<li>" . _e( 'No items', 'my-text-domain' ) . "</li>";
+		} else{
+			foreach ($rss_items as $item){
+				echo "<li>";
+				echo "<strong><a href='" . esc_url( $item->get_permalink()) . "'>";
+				echo esc_html($item->get_title());
+				echo "</a></strong>";
+				echo "</li>";
+			}
+		}
+	echo "</ul>";
 }
 
 function widget_noticiasterranova($args){
